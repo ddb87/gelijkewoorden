@@ -17,15 +17,16 @@ fnameobj = "fileobj.txt"
 fnameverb = "fileverb.txt"
 fnameconj = "fileznw.txt"
 
-infilesubj = open(fnamesubj,"r")
-infileobj = open(fnameobj,"r")
-infileverb = open(fnameverb,"r")
-infileconj = open(fnameconj,"r")
+infilesubj = open(fnamesubj,"r",encoding="utf-8")
+infileobj = open(fnameobj,"r",encoding="utf-8")
+infileverb = open(fnameverb,"r",encoding="utf-8")
+infileconj = open(fnameconj,"r",encoding="utf-8")
 
 dictsubj = eval(infilesubj.read())
 dictobj = eval(infileobj.read())
 dictverb = eval(infileverb.read())
 dictconj = eval(infileconj.read())
+
 
 infilesubj.close()
 infileobj.close()
@@ -37,6 +38,8 @@ znwhits = dict()
 wordscores = dict()
 subjhits =  list()
 subjverbhits = list()
+objhits =  list()
+objverbhits = list()
 keyword = input("Wat wilt u als zoekwoord?: ")
 listscorekeyword = [keyword]
 listscorehits = list()
@@ -68,6 +71,16 @@ for key, value in dictsubj.items():
                                     if item[0] != "hebben":
                                             subjhits.append(item[0])
 
+#Werkwoorden zoeken die voorkomen met het zoekwoord in de lijst objhits plaatsen. 
+for key, value in dictobj.items():
+    if key == keyword:
+        for item in value:
+            if item[0] not in objhits:
+                    if item[0] != "zijn":
+                            if item[0] != "worden":
+                                    if item[0] != "hebben":
+                                            objhits.append(item[0])
+
 #Resultaten van de onderwerpen (werkwoorden) vergelijken met andere onderwerpen bij deze werkwoorden
 for werkwoord in subjhits:
     for key, value in dictverb.items():
@@ -77,10 +90,17 @@ for werkwoord in subjhits:
                         if item[0] != keyword:
                             subjverbhits.append(item[0])
 
-
+#Resultaten van de onderwerpen (werkwoorden) vergelijken met andere onderwerpen bij deze werkwoorden 2
+for werkwoord in objhits:
+    for key, value in dictverb.items():
+            if key == werkwoord:
+                for item in value:
+                    if item[0] not in objverbhits:
+                        if item[0] != keyword:
+                            objverbhits.append(item[0])
 
 #Waarden berekenen van de werkwoorden bij het zoekwoord
-for werkwoord in subjhits:
+for werkwoord in subjhits+objhits:
         if werkwoord in dictverb.keys():
                 for key, value in dictverb.items():
                         if key == werkwoord:
@@ -95,6 +115,19 @@ for werkwoord in subjhits:
 for wordhit in subjverbhits:
         hitlist = [wordhit]
         for werkwoord in subjhits:
+                hitlist.append(0)
+                for key, value in dictverb.items():
+                        if key == werkwoord:
+                                for item in value:
+                                        if item[0] == wordhit:
+                                                hitlist[-1] = item[1]
+
+        listscorehits.append(hitlist)
+
+#Waarden berekenen bij verschillende gevonden onderwerpen
+for wordhit in objverbhits:
+        hitlist = [wordhit]
+        for werkwoord in objhits:
                 hitlist.append(0)
                 for key, value in dictverb.items():
                         if key == werkwoord:
@@ -138,6 +171,8 @@ else:
         itemsscore.sort()
         itemsscore.sort(key=byFreq, reverse=True)
         count = 0
-        for i in range(20):
+        top10 = []
+        for i in range(10):
                 woord, relevantie = itemsscore[i]
-                print('{0:<15}'.format(woord))
+                top10.append(woord)
+        print("De woorden die het meest op",keyword,"lijken zijn: {0}.".format(", ".join(top10)))
